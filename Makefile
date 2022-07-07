@@ -19,6 +19,12 @@ proto-gen:
 
 lint:
 	golint -set_exit_status ${PKG_LIST}
-	
+
 migrate-jeyran: set-env
 	env POSTGRES_HOST=${POSTGRES_HOST} env POSTGRES_PORT=${POSTGRES_PORT} env POSTGRES_USER=${POSTGRES_USER} env POSTGRES_PASSWORD=${POSTGRES_PASSWORD} env POSTGRES_DB=${POSTGRES_DB} ./scripts/migrate-jeyran.sh
+
+pull-proto-module:
+	git submodule update --init --recursive
+
+update-proto-module:
+	git submodule update --remote --rebase
