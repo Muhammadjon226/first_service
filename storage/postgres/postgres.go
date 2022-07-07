@@ -2,13 +2,14 @@ package postgres
 
 import (
 	"database/sql"
-	"fmt"
+	"errors"
 	"log"
 	"strings"
 
 	pbFirst "github.com/Muhammadjon226/first_service/genproto/first_service"
 	"github.com/Muhammadjon226/first_service/models"
 	"github.com/Muhammadjon226/first_service/pkg/helper"
+	"github.com/Muhammadjon226/first_service/pkg/newerror"
 	"github.com/Muhammadjon226/first_service/storage/repo"
 	"github.com/jmoiron/sqlx"
 )
@@ -119,6 +120,9 @@ func (fr *firstRepo) Get(input *pbFirst.ByIdReq) (*pbFirst.PostResponse, error) 
 		&response.CreatedAt,
 		&updatedAt,
 	)
+	if err == sql.ErrNoRows {
+		return nil, newerror.ErrNotFound
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -129,43 +133,35 @@ func (fr *firstRepo) Get(input *pbFirst.ByIdReq) (*pbFirst.PostResponse, error) 
 
 func (fr *firstRepo) Delete(input *pbFirst.ByIdReq) error {
 
-	_, err := fr.db.Exec(`DELETE FROM posts WHERE id = $1`, input.Id)
+	result, err := fr.db.Exec(`DELETE FROM posts WHERE id = $1`, input.Id)
 	if err != nil {
 		return err
+	}
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return newerror.ErrNotFound
 	}
 
 	return nil
 }
 
-func (fr *firstRepo) Update(input *pbFirst.Post) (*pbFirst.PostResponse, error) {
-	var updatedAt sql.NullString
-	response := pbFirst.PostResponse{}
+func (fr *firstRepo) Update(input *pbFirst.Post) (*pbFirst.EmptyResp, error) {
 
-	err := fr.db.QueryRow(`
+	result, err := fr.db.Exec(`
 			UPDATE posts SET
 				updated_at = CURRENT_TIMESTAMP,
 				user_id = CASE WHEN $1 = 0 THEN user_id ELSE $1 END,
 				title = CASE WHEN $2 = '' THEN title ELSE $2 END,
 				body = CASE WHEN $3 = '' THEN body ELSE $3 END
 			WHERE id = $4
-			RETURNING created_at, updated_at, user_id, title, body
 		`, input.UserId, input.Title, input.Body, input.Id,
-	).Scan(
-		&response.CreatedAt,
-		&updatedAt,
-		&response.UserId,
-		&response.Title,
-		&response.Body,
 	)
 	if err != nil {
 		return nil, err
 	}
-	response.Id = input.Id
-	response.UpdatedAt = updatedAt.String
-	fmt.Println(response)
-	fmt.Println(updatedAt.String)
-
-	return &response, nil
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return nil, newerror.ErrNotFound
+	}
+	return &pbFirst.EmptyResp{}, nil
 }
 func (fr *firstRepo) List(input *pbFirst.ListReq) (*pbFirst.ListResp, error) {
 	posts := make([]*pbFirst.PostResponse, 0, input.Limit)
@@ -179,6 +175,12 @@ func (fr *firstRepo) List(input *pbFirst.ListReq) (*pbFirst.ListResp, error) {
 		SELECT * FROM posts LIMIT $1 OFFSET $2
 		`, input.Limit, offset,
 	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, newerror.ErrNotFound
+		}
+		return nil, err
+	}
 	defer rows.Close()
 
 	for rows.Next() {

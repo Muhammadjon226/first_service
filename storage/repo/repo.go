@@ -11,6 +11,6 @@ type FirstStorageI interface {
 	Create(*pbFirst.Post) (*pbFirst.PostResponse, error)
 	Get(*pbFirst.ByIdReq) (*pbFirst.PostResponse, error)
 	List(*pbFirst.ListReq) (*pbFirst.ListResp, error)
-	Update(*pbFirst.Post) (*pbFirst.PostResponse, error)
+	Update(*pbFirst.Post) (*pbFirst.EmptyResp, error)
 	Delete(*pbFirst.ByIdReq) error
 }

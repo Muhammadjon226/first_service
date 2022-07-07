@@ -83,14 +83,14 @@ func (fs *FirstService) ListPosts(ctx context.Context, req *pbFirst.ListReq) (*p
 }
 
 //UpdatePost ...
-func (fs *FirstService) UpdatePost(ctx context.Context, req *pbFirst.Post) (*pbFirst.PostResponse, error) {
-	post, err := fs.storage.FirstService().Update(req)
+func (fs *FirstService) UpdatePost(ctx context.Context, req *pbFirst.Post) (*pbFirst.EmptyResp, error) {
+	response, err := fs.storage.FirstService().Update(req)
 	if err != nil {
 		fs.logger.Error("failed to update Post", l.Error(err))
 		return nil, status.Error(codes.Internal, "failed to update Post")
 	}
 
-	return post, nil
+	return response, nil
 }
 
 //DeletePost ...
