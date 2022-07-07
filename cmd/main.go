@@ -8,6 +8,7 @@ import (
 	"github.com/Muhammadjon226/first_service/pkg/db"
 	"github.com/Muhammadjon226/first_service/pkg/logger"
 	"github.com/Muhammadjon226/first_service/service"
+	"github.com/Muhammadjon226/first_service/storage"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -32,7 +33,9 @@ func main() {
 	if err != nil {
 		log.Fatal("sqlx connection to firstgres error", logger.Error(err))
 	}
-	firstService := service.NewFirstService(connDB, log)
+	pgStorage := storage.NewStoragePg(connDB)
+
+	firstService := service.NewFirstService(pgStorage, log)
 
 	lis, err := net.Listen("tcp", cfg.RPCPort)
 	if err != nil {

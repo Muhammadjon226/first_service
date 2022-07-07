@@ -12,13 +12,14 @@ type IStorage interface {
 	FirstService() repo.FirstStorageI
 }
 
+//storagePg ...
 type storagePg struct {
 	db       *sqlx.DB
 	firstRepo repo.FirstStorageI
 }
 
 // NewStoragePg ...
-func NewStoragePg(db *sqlx.DB) *storagePg {
+func NewStoragePg(db *sqlx.DB) IStorage {
 	return &storagePg{
 		db:       db,
 		firstRepo: postgres.NewFirstRepo(db),

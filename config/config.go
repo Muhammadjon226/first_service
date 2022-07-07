@@ -17,8 +17,6 @@ type Config struct {
 	PostgresPassword  string
 	LogLevel          string
 	RPCPort           string
-	ReviewServiceHost string
-	ReviewServicePort int
 }
 
 // Load loads environment vars and inflates Config
